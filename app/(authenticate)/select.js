@@ -1,47 +1,81 @@
-import { Pressable, StyleSheet, Text, View, Image } from 'react-native';
-import React, { useEffect, useState } from 'react';
+import { Pressable, StyleSheet, Text, View, Image } from "react-native";
+import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "core-js/stable/atob";
-import { jwtDecode } from "jwt-decode";
-import axios from "axios"
+import { jwtDecode } from "jwt-decode"; // Sửa lại cách import
+import axios from "axios";
 import { useRouter } from "expo-router";
 
-const select = () => {
+const Select = () => {
   const router = useRouter();
   const [option, setOption] = useState("");
   const [userId, setUserId] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = await AsyncStorage.getItem("auth");
-      const decodedToken = jwtDecode(token);
-      const userId = decodedToken.userId;
-      setUserId(userId)
-    }
+      try {
+        const token = await AsyncStorage.getItem("auth");
+
+        if (!token) {
+          console.error("Token không tồn tại hoặc không hợp lệ");
+          return;
+        }
+
+        const decodedToken = jwtDecode(token); // Decode token
+        console.log("Token đã decode:", decodedToken);
+
+        if (decodedToken && decodedToken.userId) {
+          setUserId(decodedToken.userId); // Lưu userId vào state
+        } else {
+          console.error("Token không chứa userId hợp lệ");
+        }
+      } catch (error) {
+        console.error("Lỗi khi xử lý token:", error);
+      }
+    };
 
     fetchUser();
   }, []);
 
   const updateUserGender = async () => {
     try {
-      const response = await axios.put(`http://localhost:3000/api/users/${userId}/gender`, {
-        gender: option
-      });
+      if (!userId) {
+        console.error("UserId không tồn tại. Vui lòng kiểm tra lại.");
+        return;
+      }
 
-      console.log(response.data);
+      const response = await axios.put(
+        `http://localhost:3000/api/users/${userId}/gender`, // Thay thế `192.168.x.x` bằng IP cục bộ của bạn
+        { gender: option }
+      );
 
-      if (response.status == 200) {
-        router.replace("(tabs)/bio")
+      console.log("Phản hồi từ server:", response.data);
+
+      if (response.status === 200) {
+        router.replace("(tabs)/bio");
       }
     } catch (error) {
-      console.log("error", error)
+      console.error("Lỗi khi cập nhật giới tính:", error);
     }
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: "white", padding: 12 }}>
-      <Pressable onPress={() => setOption("male")} style={{ backgroundColor: "#F0F0F0", padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 25, borderRadius: 5, borderColor: option === "male" ? "#D0D0D0" : "transparent", borderWidth: option === "male" ? 1 : 0 }}>
-        <Text style={{ fontSize: 16, fontWeight: "500" }}>I am Trump</Text>
+      <Pressable
+        onPress={() => setOption("male")}
+        style={{
+          backgroundColor: "#F0F0F0",
+          padding: 12,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 25,
+          borderRadius: 5,
+          borderColor: option === "male" ? "#D0D0D0" : "transparent",
+          borderWidth: option === "male" ? 1 : 0,
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "500" }}>Tôi là Nam</Text>
         <Image
           style={{ width: 50, height: 50 }}
           source={{
@@ -50,8 +84,21 @@ const select = () => {
         />
       </Pressable>
 
-      <Pressable onPress={() => setOption("female")} style={{ backgroundColor: "#F0F0F0", padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 25, borderRadius: 5, borderColor: option === "female" ? "#D0D0D0" : "transparent", borderWidth: option === "female" ? 1 : 0 }}>
-        <Text style={{ fontSize: 16, fontWeight: "500" }}>I am Women</Text>
+      <Pressable
+        onPress={() => setOption("female")}
+        style={{
+          backgroundColor: "#F0F0F0",
+          padding: 12,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 25,
+          borderRadius: 5,
+          borderColor: option === "female" ? "#D0D0D0" : "transparent",
+          borderWidth: option === "female" ? 1 : 0,
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "500" }}>Tôi là nữ</Text>
         <Image
           style={{ width: 50, height: 50 }}
           source={{
@@ -60,8 +107,21 @@ const select = () => {
         />
       </Pressable>
 
-      <Pressable onPress={() => setOption("nonbinary")} style={{ backgroundColor: "#F0F0F0", padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 25, borderRadius: 5, borderColor: option === "nonbinary" ? "#D0D0D0" : "transparent", borderWidth: option === "nonbinary" ? 1 : 0 }}>
-        <Text style={{ fontSize: 16, fontWeight: "500" }}>I am Non-Binary</Text>
+      <Pressable
+        onPress={() => setOption("nonbinary")}
+        style={{
+          backgroundColor: "#F0F0F0",
+          padding: 12,
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: 25,
+          borderRadius: 5,
+          borderColor: option === "nonbinary" ? "#D0D0D0" : "transparent",
+          borderWidth: option === "nonbinary" ? 1 : 0,
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "500" }}>Không xác định</Text>
         <Image
           style={{ width: 50, height: 50 }}
           source={{
@@ -69,7 +129,6 @@ const select = () => {
           }}
         />
       </Pressable>
-
 
       {option && (
         <Pressable
@@ -89,9 +148,9 @@ const select = () => {
         </Pressable>
       )}
     </View>
-  )
-}
+  );
+};
 
-export default select
+export default Select;
 
-const styles = StyleSheet.create({})
+const styles = StyleSheet.create({});
